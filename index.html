@@ -436,9 +436,7 @@
           try {
             if (
               !WORKER_UPLOAD_URL.startsWith("https://") ||
-              WORKER_UPLOAD_URL.includes(
-                "PASTE_YOUR_CLOUDFLARE_WORKER_URL_HERE",
-              )
+              WORKER_UPLOAD_URL.includes("uploaderfile.rabbitmq198.workers.dev")
             ) {
               throw new Error(
                 "Worker URL belum diatur. Ikuti README, isi WORKER_UPLOAD_URL di index.html, lalu push perubahan ke GitHub.",
