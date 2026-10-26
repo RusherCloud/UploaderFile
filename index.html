@@ -319,7 +319,7 @@
         // Ganti nilai ini dengan URL Worker yang lo deploy, contoh:
         // https://rusher-cloud-upload.username.workers.dev/api/upload
         const WORKER_UPLOAD_URL =
-          "uploaderfile.rabbitmq198.workers.dev/api/upload";
+          "https://uploaderfile.rabbitmq198.workers.dev/api/upload";
 
         const picker = document.getElementById("picker");
         const drop = document.getElementById("drop");
@@ -434,10 +434,7 @@
           item.error = "";
           render();
           try {
-            if (
-              !WORKER_UPLOAD_URL.startsWith("https://") ||
-              WORKER_UPLOAD_URL.includes("uploaderfile.rabbitmq198.workers.dev")
-            ) {
+            if (!WORKER_UPLOAD_URL.startsWith("https://")) {
               throw new Error(
                 "Worker URL belum diatur. Ikuti README, isi WORKER_UPLOAD_URL di index.html, lalu push perubahan ke GitHub.",
               );
