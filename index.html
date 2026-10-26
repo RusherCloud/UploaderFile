@@ -318,8 +318,14 @@
       (() => {
         // Ganti nilai ini dengan URL Worker yang lo deploy, contoh:
         // https://rusher-cloud-upload.username.workers.dev/api/upload
-        const WORKER_UPLOAD_URL =
-          "https://uploaderfile.rabbitmq198.workers.dev/api/upload";
+        const WORKER_BASE_URL = "https://uploaderfile.rabbitmq198.workers.dev";
+        const WORKER_UPLOAD_URL = (() => {
+          const base = String(WORKER_BASE_URL)
+            .trim()
+            .replace(/\/+$/, "")
+            .replace(/(\/api\/upload)+$/, "");
+          return base + "/api/upload";
+        })();
 
         const picker = document.getElementById("picker");
         const drop = document.getElementById("drop");
@@ -434,39 +440,54 @@
           item.error = "";
           render();
           try {
-            if (!WORKER_UPLOAD_URL.startsWith("https://")) {
-              throw new Error(
-                "Worker URL belum diatur. Ikuti README, isi WORKER_UPLOAD_URL di index.html, lalu push perubahan ke GitHub.",
-              );
+            if (!/^https:\/\//i.test(WORKER_UPLOAD_URL)) {
+              throw new Error("WORKER_BASE_URL harus diawali https://");
             }
+
             const form = new FormData();
             form.append("file", item.file, item.file.name);
-            const response = await fetch(WORKER_UPLOAD_URL, {
-              method: "POST",
-              body: form,
-            });
+
+            let response;
+            try {
+              response = await fetch(WORKER_UPLOAD_URL, {
+                method: "POST",
+                body: form,
+              });
+            } catch {
+              throw new Error(
+                `Gagal terhubung ke ${WORKER_UPLOAD_URL}. Cek apakah Worker aktif dan origin halaman ini ada di ALLOWED_ORIGINS (CORS).`,
+              );
+            }
+
             item.progress = 85;
             render();
             const text = await response.text();
+
             let data;
             try {
               data = JSON.parse(text);
             } catch {
+              const snippet = text.replace(/\s+/g, " ").slice(0, 120);
               throw new Error(
-                `Server mengembalikan respons non-JSON (HTTP ${response.status}). Periksa URL Worker dan deployment.`,
+                `Respons non-JSON (HTTP ${response.status}) dari ${WORKER_UPLOAD_URL} → "${snippet}"`,
               );
             }
-            if (!response.ok)
+
+            if (!response.ok) {
               throw new Error(
                 data.error ||
                   data.message ||
                   `Upload gagal (HTTP ${response.status}).`,
               );
+            }
+
             const url = data.downloadLinkEncoded || data.downloadLink;
-            if (!url || !/^https?:\/\//i.test(url))
+            if (!url || !/^https?:\/\//i.test(url)) {
               throw new Error(
                 data.error || "Respons API tidak berisi URL download.",
               );
+            }
+
             item.url = url;
             item.status = "done";
             item.progress = 100;
